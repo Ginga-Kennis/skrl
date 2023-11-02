@@ -42,7 +42,7 @@ class Critic(DeterministicMixin, Model):
         x = F.relu(self.linear_layer_2(x))
         return self.linear_layer_3(x), {}
 
-env = gym.make("BipedalWalker-v3", hardcore=True, render_mode="human")
+env = gym.make("BipedalWalker-v3", hardcore=False, render_mode="human")
 
 env = wrap_env(env)
 
@@ -63,16 +63,19 @@ for model in models.values():
     model.init_parameters(method_name="normal_", mean=0.0, std=0.1)
 
 cfg = SAC_DEFAULT_CONFIG.copy()
-cfg["discount_factor"] = 0.98
-cfg["batch_size"] = 100
+cfg["batch_size"] = 256
+cfg["discount_factor"] = 0.99
+cfg["polyak"] = 0.005
+cfg["actor_learning_rate"] = 1e-4
+cfg["critic_learning_rate"] = 1e-5
 cfg["random_timesteps"] = 0
-cfg["learning_starts"] = 1000
+cfg["learning_starts"] = 0
 cfg["learn_entropy"] = True
 # logging to TensorBoard and write checkpoints (in timesteps)
-cfg["experiment"]["write_interval"] = 75
-cfg["experiment"]["checkpoint_interval"] = 750
-cfg["experiment"]["directory"] = "runs/torch/Bipedal_Walker"
-cfg["experiment"]["directory"] = "bipedal1_play"
+cfg["experiment"]["base_directory"] = "runs/"
+cfg["experiment"]["experiment_name"] = "bipedal_play1"
+cfg["experiment"]["write_interval"] = 100
+cfg["experiment"]["checkpoint_interval"] = 1000
 
 agent = SAC(models=models,
             memory=memory,
@@ -81,7 +84,7 @@ agent = SAC(models=models,
             action_space=env.action_space,
             device=device)
 
-agent.load("runs/torch/Bipedal_Walker/bipedal1/checkpoints/best_agent.pt")
+agent.load("runs/bipedal_exp1/checkpoints/agent_871000.pt")
 
 # configure and instantiate the RL trainer
 cfg_trainer = {"timesteps": 15000, "headless": True}

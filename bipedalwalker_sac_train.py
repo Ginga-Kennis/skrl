@@ -43,7 +43,7 @@ class Critic(DeterministicMixin, Model):
         return self.linear_layer_3(x), {}
     
 
-env = gym.make("BipedalWalker-v3", hardcore=False)
+env = gym.make('FetchReach-v2', max_episode_steps=100)
 
 env = wrap_env(env)
 
@@ -64,10 +64,13 @@ for model in models.values():
     model.init_parameters(method_name="normal_", mean=0.0, std=0.1)
 
 cfg = SAC_DEFAULT_CONFIG.copy()
-cfg["discount_factor"] = 0.98
-cfg["batch_size"] = 100
+cfg["batch_size"] = 256
+cfg["discount_factor"] = 0.99
+cfg["polyak"] = 0.005
+cfg["actor_learning_rate"] = 1e-4
+cfg["critic_learning_rate"] = 1e-5
 cfg["random_timesteps"] = 0
-cfg["learning_starts"] = 1000
+cfg["learning_starts"] = 0
 cfg["learn_entropy"] = True
 # logging to TensorBoard and write checkpoints (in timesteps)
 cfg["experiment"]["base_directory"] = "runs/"
